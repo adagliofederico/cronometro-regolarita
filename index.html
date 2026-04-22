@@ -3,75 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Regolarità PRO - Master Reset</title>
+    <title>Regolarità PRO - Fixed</title>
     <style>
-        :root { --primary: #00ff00; --bg: #121212; --panel: #1e1e1e; --accent: #1565c0; --danger: #b71c1c; }
-        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; }
+        :root { --primary: #00ff00; --bg: #121212; --panel: #1e1e1e; --accent: #1565c0; --danger: #d32f2f; --start: #2e7d32; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; padding-bottom: 20px; }
         
-        #display { font-size: 22vw; font-weight: bold; font-family: monospace; color: var(--primary); margin: 10px 0; }
-        #info { font-size: 7vw; color: #ffa500; font-weight: bold; }
-        #sub-info { font-size: 4vw; color: #888; margin-bottom: 10px; }
+        /* Display */
+        #display { font-size: 20vw; font-weight: bold; font-family: monospace; color: var(--primary); margin: 5px 0; }
+        #info { font-size: 6vw; color: #ffa500; font-weight: bold; margin-top: 10px; }
+        #sub-info { font-size: 3.5vw; color: #888; margin-bottom: 5px; }
 
-        #settingsPanel { background: var(--panel); margin: 10px; border-radius: 12px; border: 1px solid #333; text-align: left; }
-        #settingsHeader { background: #333; padding: 12px; cursor: pointer; text-align: center; font-weight: bold; }
+        /* Pannello Configurazione - CORRETTO */
+        #settingsPanel { background: var(--panel); margin: 10px; border-radius: 12px; border: 1px solid #444; text-align: left; position: relative; z-index: 100; overflow: hidden; }
+        #settingsHeader { background: #333; padding: 15px; cursor: pointer; text-align: center; font-weight: bold; font-size: 16px; display: block; width: 100%; border: none; color: white; }
         #settingsContent { padding: 15px; display: none; }
 
-        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-        th { font-size: 11px; color: #888; padding: 5px; text-align: left; }
-        .pc-row input { background: #000; color: var(--primary); border: 1px solid #444; padding: 8px; width: 70px; border-radius: 4px; font-size: 16px; }
+        /* Tabella PC */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        th { font-size: 10px; color: #888; padding: 5px; text-align: left; }
+        .pc-row input { background: #000; color: var(--primary); border: 1px solid #444; padding: 8px; border-radius: 4px; font-size: 14px; }
+        .in-time { width: 60px; }
+        .in-gps { width: 110px; font-size: 11px !important; }
         
-        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        /* Toggle Switch */
+        .switch { position: relative; display: inline-block; width: 34px; height: 18px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #444; transition: .4s; border-radius: 20px; }
         input:checked + .slider { background-color: var(--accent); }
-        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider:before { transform: translateX(20px); }
+        .slider:before { position: absolute; content: ""; height: 12px; width: 12px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider:before { transform: translateX(16px); }
 
-        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 15px; }
-        button { padding: 20px; font-size: 5vw; border: none; border-radius: 12px; cursor: pointer; color: white; font-weight: bold; }
-        #startBtn { background: #2e7d32; }
-        #nextBtn { background: var(--accent); }
-        .btn-action { font-size: 14px; padding: 10px; width: 100%; margin-bottom: 8px; border-radius: 8px; }
+        /* Pulsanti di controllo */
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
+        button { padding: 20px; font-size: 5vw; border: none; border-radius: 12px; cursor: pointer; color: white; font-weight: bold; text-transform: uppercase; -webkit-tap-highlight-color: transparent; }
+        button:active { filter: brightness(1.2); transform: scale(0.96); }
+        
+        #startBtn { background: var(--start); }
+        #nextBtn { background: var(--danger); } /* SPLIT ROSSO */
+        
+        .btn-action { font-size: 12px; padding: 10px; width: 100%; margin-bottom: 8px; border-radius: 6px; }
         .btn-add { background: #444; }
-        .btn-reset { background: var(--danger); }
+        .btn-reset { background: #616161; }
         #saveBtn { background: #6a1b9a; grid-column: span 2; font-size: 4vw; padding: 12px; }
 
-        #log { background: #000; margin: 15px; padding: 10px; height: 100px; overflow-y: auto; font-family: monospace; font-size: 12px; border: 1px solid #222; text-align: left; }
+        #log { background: #000; margin: 10px; padding: 10px; height: 120px; overflow-y: auto; font-family: monospace; font-size: 11px; border: 1px solid #222; text-align: left; }
     </style>
 </head>
 <body>
 
-    <div id="info">PRONTO</div>
-    <div id="sub-info">Configura le PC per iniziare</div>
+    <div id="info">SISTEMA PRONTO</div>
+    <div id="sub-info">Tocca "Configurazione" per inserire i tempi</div>
     <div id="display">00:00.00</div>
 
     <div id="settingsPanel">
-        <div id="settingsHeader" onclick="toggleSettings()">⚙️ CONFIGURAZIONE PROVE (PC)</div>
+        <div id="settingsHeader" onclick="toggleSettings()">⚙️ CONFIGURAZIONE PC & GPS</div>
         <div id="settingsContent">
             <table id="pcTable">
                 <thead>
                     <tr>
                         <th>PC</th>
-                        <th>Tempo (s)</th>
-                        <th>Concat?</th>
+                        <th>Tempo</th>
+                        <th>GPS (Lat,Lon)</th>
+                        <th>CONCATENATE.</th>
                     </tr>
                 </thead>
                 <tbody id="pcBody"></tbody>
             </table>
             
-            <button class="btn-action btn-add" onclick="addPCRow()">+ AGGIUNGI PC</button>
-            <button class="btn-action btn-reset" onclick="resetConfig()">🗑️ CANCELLA TUTTE LE PC</button>
+            <button class="btn-action btn-add" onclick="addPCRow()">+ AGGIUNGI PROVA</button>
+            <button class="btn-action btn-reset" onclick="resetConfig()">🗑️ RESET CONFIGURAZIONE</button>
             
-            <div style="margin-top: 15px; border-top: 1px solid #444; padding-top: 10px;">
-                <label style="font-size: 12px; color: #888;">Beep ultimi (sec):</label>
-                <input type="number" id="beepStart" value="5" style="width: 50px; background: #000; color: #0f0; border: 1px solid #444; padding: 5px;">
+            <div style="display: flex; gap: 15px; margin-top: 15px; border-top: 1px solid #444; padding-top: 15px;">
+                <div>
+                    <label style="font-size: 11px; color: #888;">Beep ultimi (s):</label><br>
+                    <input type="number" id="beepStart" value="5" style="width: 50px; background: #000; color: #0f0; border: 1px solid #444; padding: 5px;">
+                </div>
+                <div>
+                    <label style="font-size: 11px; color: #888;">Raggio GPS (m):</label><br>
+                    <input type="number" id="gpsRange" value="10" style="width: 50px; background: #000; color: #0f0; border: 1px solid #444; padding: 5px;">
+                </div>
             </div>
         </div>
     </div>
 
     <div class="controls">
-        <button id="startBtn" onclick="toggleGara()">START GARA</button>
-        <button id="nextBtn" onclick="prossimoSettore(true)">SPLIT / OK</button>
+        <button id="startBtn" onclick="toggleGara()">START</button>
+        <button id="nextBtn" onclick="prossimoSettore(true)">SPLIT</button>
         <button id="saveBtn" onclick="scaricaRisultati()">SCARICA REPORT (.TXT)</button>
     </div>
 
@@ -85,9 +102,16 @@
         let lastBeepSecond = -1;
         let logRisultati = [];
         let animationFrame;
+        let watchID = null;
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-        window.onload = () => { addPCRow(); }; // Parte con una riga vuota
+        window.onload = () => { addPCRow(); };
+
+        function toggleSettings() {
+            const c = document.getElementById('settingsContent');
+            const current = window.getComputedStyle(c).display;
+            c.style.display = (current === 'none') ? 'block' : 'none';
+        }
 
         function addPCRow() {
             const tbody = document.getElementById('pcBody');
@@ -95,8 +119,9 @@
             const row = tbody.insertRow();
             row.className = "pc-row";
             row.innerHTML = `
-                <td>${rowCount}</td>
-                <td><input type="number" step="0.01" class="pc-time" placeholder="0.00"></td>
+                <td style="font-size:12px">${rowCount}</td>
+                <td><input type="number" step="0.01" class="pc-time in-time" placeholder="0.0"></td>
+                <td><input type="text" class="pc-gps in-gps" placeholder="45.x, 9.x"></td>
                 <td>
                     <label class="switch">
                         <input type="checkbox" class="pc-concat" checked>
@@ -107,22 +132,16 @@
         }
 
         function resetConfig() {
-            if (confirm("Vuoi cancellare tutte le prove inserite?")) {
+            if (confirm("Attenzione: questo cancellerà tutti i tempi inseriti. Procedere?")) {
                 document.getElementById('pcBody').innerHTML = "";
+                addPCRow();
                 PC_List = [];
                 indicePC = 0;
                 logRisultati = [];
                 document.getElementById('log').innerHTML = "";
                 document.getElementById('display').innerText = "00:00.00";
-                document.getElementById('info').innerText = "CONFIGURA PC";
-                document.getElementById('sub-info').innerText = "Dati azzerati";
-                addPCRow(); // Aggiunge una riga pulita per ricominciare
+                document.getElementById('info').innerText = "CONFIGURAZIONE RESETTATA";
             }
-        }
-
-        function toggleSettings() {
-            const c = document.getElementById('settingsContent');
-            c.style.display = c.style.display === 'block' ? 'none' : 'block';
         }
 
         function beep(freq, duration) {
@@ -131,6 +150,31 @@
             osc.connect(gain); gain.connect(audioCtx.destination);
             osc.frequency.value = freq; osc.start();
             setTimeout(() => osc.stop(), duration);
+        }
+
+        function calcolaDistanza(lat1, lon1, lat2, lon2) {
+            const R = 6371000;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        function monitoraGPS() {
+            if ("geolocation" in navigator) {
+                watchID = navigator.geolocation.watchPosition((pos) => {
+                    if (!running || indicePC >= PC_List.length) return;
+                    const targetCoords = PC_List[indicePC].gps;
+                    if (targetCoords) {
+                        const d = calcolaDistanza(pos.coords.latitude, pos.coords.longitude, targetCoords.lat, targetCoords.lon);
+                        const raggio = parseFloat(document.getElementById('gpsRange').value) || 10;
+                        if (d <= raggio) {
+                            prossimoSettore(false);
+                            beep(1200, 200); 
+                        }
+                    }
+                }, null, { enableHighAccuracy: true });
+            }
         }
 
         function update() {
@@ -159,21 +203,28 @@
         function toggleGara() {
             if (!running) {
                 const rows = document.querySelectorAll('.pc-row');
-                PC_List = Array.from(rows).map(row => ({
-                    tempo: parseFloat(row.querySelector('.pc-time').value),
-                    concat: row.querySelector('.pc-concat').checked
-                })).filter(pc => !isNaN(pc.tempo));
+                PC_List = Array.from(rows).map(row => {
+                    const gpsInput = row.querySelector('.pc-gps').value;
+                    const gpsVal = gpsInput ? gpsInput.split(',') : [];
+                    return {
+                        tempo: parseFloat(row.querySelector('.pc-time').value),
+                        concat: row.querySelector('.pc-concat').checked,
+                        gps: gpsVal.length === 2 ? { lat: parseFloat(gpsVal[0]), lon: parseFloat(gpsVal[1]) } : null
+                    };
+                }).filter(pc => !isNaN(pc.tempo));
 
-                if (PC_List.length === 0) return alert("Inserisci almeno un tempo valido!");
+                if (PC_List.length === 0) return alert("Errore: Inserisci almeno un tempo!");
                 
                 if (audioCtx.state === 'suspended') audioCtx.resume();
                 indicePC = 0;
                 document.getElementById('settingsContent').style.display = 'none';
+                monitoraGPS();
                 startPC();
             } else {
                 running = false;
+                if(watchID) navigator.geolocation.clearWatch(watchID);
                 cancelAnimationFrame(animationFrame);
-                document.getElementById('startBtn').innerText = "START GARA";
+                document.getElementById('startBtn').innerText = "START";
             }
         }
 
@@ -183,7 +234,7 @@
             lastBeepSecond = -1;
             document.getElementById('startBtn').innerText = "STOP";
             document.getElementById('info').innerText = `PC ${indicePC + 1}`;
-            document.getElementById('sub-info').innerText = PC_List[indicePC].concat ? "CONCATENATA" : "FINISCE CON STOP";
+            document.getElementById('sub-info').innerText = PC_List[indicePC].gps ? "GPS ATTIVO" : "MANUALE";
             update();
         }
 
@@ -191,7 +242,7 @@
             const ora = (performance.now() - startTime) / 1000;
             const target = PC_List[indicePC].tempo;
             const scarto = ora - target;
-            const entry = `PC${indicePC+1}: T:${target}s | E:${ora.toFixed(3)}s | Err:${(scarto > 0 ? '+' : '') + scarto.toFixed(3)}`;
+            const entry = `PC${indicePC+1}: T:${target} | E:${ora.toFixed(3)} | Err:${(scarto > 0 ? '+' : '') + scarto.toFixed(3)}`;
             
             logRisultati.push(entry);
             document.getElementById('log').innerHTML = `<div style="color:#0f0">${entry}</div>` + document.getElementById('log').innerHTML;
@@ -206,18 +257,18 @@
                     startPC();
                 } else {
                     document.getElementById('display').innerText = "00:00.00";
-                    document.getElementById('info').innerText = `PRONTO PC ${indicePC + 1}`;
+                    document.getElementById('info').innerText = `ATTESA PC ${indicePC + 1}`;
                     document.getElementById('startBtn').innerText = "START PC";
                 }
             } else {
                 document.getElementById('display').innerText = "FINISH";
-                document.getElementById('info').innerText = "FINE GARA";
-                document.getElementById('startBtn').innerText = "START GARA";
+                document.getElementById('info').innerText = "GARA COMPLETATA";
+                if(watchID) navigator.geolocation.clearWatch(watchID);
             }
         }
 
         function scaricaRisultati() {
-            if (logRisultati.length === 0) return alert("Nessun risultato!");
+            if (logRisultati.length === 0) return alert("Nessun dato da salvare.");
             const blob = new Blob([logRisultati.join("\n")], { type: 'text/plain' });
             const a = document.createElement('a');
             a.download = `report_gara.txt`;
