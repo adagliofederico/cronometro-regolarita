@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Regolarità PRO - Configurazione Avanzata</title>
+    <style>
+        :root { --primary: #00ff00; --bg: #121212; --panel: #1e1e1e; --accent: #1565c0; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; }
+        
+        /* Display */
+        #display { font-size: 22vw; font-weight: bold; font-family: monospace; color: var(--primary); margin: 10px 0; }
+        #info { font-size: 7vw; color: #ffa500; font-weight: bold; }
+        #sub-info { font-size: 4vw; color: #888; margin-bottom: 10px; }
+
+        /* Pannello Configurazione */
+        #settingsPanel { background: var(--panel); margin: 10px; border-radius: 12px; border: 1px solid #333; text-align: left; }
+        #settingsHeader { background: #333; padding: 12px; cursor: pointer; text-align: center; font-weight: bold; }
+        #settingsContent { padding: 15px; display: none; }
+
+        /* Tabella PC */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        th { font-size: 12px; color: #888; padding: 5px; text-align: left; }
+        td { padding: 5px 0; }
+        .pc-row input { background: #000; color: var(--primary); border: 1px solid #444; padding: 8px; width: 60px; border-radius: 4px; }
+        
+        /* Toggle Switch */
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #444; transition: .4s; border-radius: 20px; }
+        input:checked + .slider { background-color: var(--accent); }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* Pulsanti */
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 15px; }
+        button { padding: 20px; font-size: 5vw; border: none; border-radius: 12px; cursor: pointer; color: white; font-weight: bold; }
+        #startBtn { background: #2e7d32; }
+        #nextBtn { background: var(--accent); }
+        .btn-add { background: #444; font-size: 14px; padding: 8px; width: 100%; margin-bottom: 10px; }
+        #saveBtn { background: #6a1b9a; grid-column: span 2; font-size: 4vw; padding: 12px; }
+
+        #log { background: #000; margin: 15px; padding: 10px; height: 100px; overflow-y: auto; font-family: monospace; font-size: 12px; border: 1px solid #222; text-align: left; }
+    </style>
+</head>
+<body>
+
+    <div id="info">CONFIGURA PC</div>
+    <div id="sub-info">In attesa...</div>
+    <div id="display">00:00.00</div>
+
+    <div id="settingsPanel">
+        <div id="settingsHeader" onclick="toggleSettings()">⚙️ CONFIGURAZIONE PROVE (PC)</div>
+        <div id="settingsContent">
+            <table id="pcTable">
+                <thead>
+                    <tr>
+                        <th>PC #</th>
+                        <th>Tempo (s)</th>
+                        <th>Concatenata?</th>
+                    </tr>
+                </thead>
+                <tbody id="pcBody">
+                    </tbody>
+            </table>
+            <button class="btn-add" onclick="addPCRow()">+ AGGIUNGI PC</button>
+            
+            <label style="font-size: 12px; color: #888;">Beep ultimi (sec):</label>
+            <input type="number" id="beepStart" value="5" style="width: 50px; background: #000; color: #0f0; border: 1px solid #444; padding: 5px;">
+        </div>
+    </div>
+
+    <div class="controls">
+        <button id="startBtn" onclick="toggleGara()">START GARA</button>
+        <button id="nextBtn" onclick="prossimoSettore(true)">SPLIT / OK</button>
+        <button id="saveBtn" onclick="scaricaRisultati()">SCARICA REPORT (.TXT)</button>
+    </div>
+
+    <div id="log"></div>
+
+    <script>
+        let running = false;
+        let startTime = 0;
+        let PC_List = [];
+        let indicePC = 0;
+        let lastBeepSecond = -1;
+        let logRisultati = [];
+        let animationFrame;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Inizializza con 3 PC di esempio
+        window.onload = () => { for(let i=0; i<3; i++) addPCRow(); };
+
+        function addPCRow() {
+            const tbody = document.getElementById('pcBody');
+            const rowCount = tbody.rows.length + 1;
+            const row = tbody.insertRow();
+            row.className = "pc-row";
+            row.innerHTML = `
+                <td>${rowCount}</td>
+                <td><input type="number" step="0.01" class="pc-time" value="10.00"></td>
+                <td>
+                    <label class="switch">
+                        <input type="checkbox" class="pc-concat" checked>
+                        <span class="slider"></span>
+                    </label>
+                </td>
+            `;
+        }
+
+        function toggleSettings() {
+            const c = document.getElementById('settingsContent');
+            c.style.display = c.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function beep(freq, duration) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.frequency.value = freq; osc.start();
+            setTimeout(() => osc.stop(), duration);
+        }
+
+        function update() {
+            if (!running) return;
+            const elapsed = (performance.now() - startTime) / 1000;
+            const target = PC_List[indicePC].tempo;
+            const remaining = Math.max(0, target - elapsed);
+
+            const mins = Math.floor(remaining / 60);
+            const secs = Math.floor(remaining % 60);
+            const cents = Math.floor((remaining % 1) * 100);
+            document.getElementById('display').innerText = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}.${cents.toString().padStart(2,'0')}`;
+
+            const remInt = Math.floor(remaining);
+            const bStart = parseInt(document.getElementById('beepStart').value);
+
+            if (remaining <= bStart && remInt !== lastBeepSecond && remaining > 0.05) {
+                beep(remInt === 0 ? 1500 : 800, remInt === 0 ? 500 : 100);
+                lastBeepSecond = remInt;
+            }
+
+            if (remaining <= 0) { prossimoSettore(false); return; }
+            animationFrame = requestAnimationFrame(update);
+        }
+
+        function toggleGara() {
+            if (!running) {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                
+                // Legge la tabella
+                const rows = document.querySelectorAll('.pc-row');
+                PC_List = Array.from(rows).map(row => ({
+                    tempo: parseFloat(row.querySelector('.pc-time').value),
+                    concat: row.querySelector('.pc-concat').checked
+                }));
+
+                if (isNaN(PC_List[0].tempo)) return alert("Controlla i tempi!");
+                
+                indicePC = 0;
+                document.getElementById('settingsContent').style.display = 'none';
+                startPC();
+            } else {
+                stopGara();
+            }
+        }
+
+        function startPC() {
+            startTime = performance.now();
+            running = true;
+            lastBeepSecond = -1;
+            document.getElementById('startBtn').innerText = "STOP";
+            document.getElementById('info').innerText = `PC ${indicePC + 1}`;
+            document.getElementById('sub-info').innerText = PC_List[indicePC].concat ? "CONCATENATA" : "FINISCE CON STOP";
+            update();
+        }
+
+        function prossimoSettore(isManual) {
+            const ora = (performance.now() - startTime) / 1000;
+            const target = PC_List[indicePC].tempo;
+            const scarto = ora - target;
+            const entry = `PC${indicePC+1}: T:${target}s | E:${ora.toFixed(3)}s | Err:${(scarto > 0 ? '+' : '') + scarto.toFixed(3)}`;
+            
+            logRisultati.push(entry);
+            document.getElementById('log').innerHTML = `<div style="color:#0f0">${entry}</div>` + document.getElementById('log').innerHTML;
+
+            running = false;
+            cancelAnimationFrame(animationFrame);
+
+            if (indicePC < PC_List.length - 1) {
+                let wasConcat = PC_List[indicePC].concat;
+                indicePC++;
+                
+                // Se era concatenata, riparte subito. Altrimenti aspetta lo START.
+                if (wasConcat) {
+                    startPC();
+                } else {
+                    document.getElementById('display').innerText = "00:00.00";
+                    document.getElementById('info').innerText = `PRONTO PC ${indicePC + 1}`;
+                    document.getElementById('startBtn').innerText = "START PC";
+                }
+            } else {
+                document.getElementById('display').innerText = "FINISH";
+                document.getElementById('info').innerText = "FINE GARA";
+                document.getElementById('startBtn').innerText = "START GARA";
+            }
+        }
+
+        function stopGara() {
+            running = false;
+            cancelAnimationFrame(animationFrame);
+            document.getElementById('startBtn').innerText = "START GARA";
+        }
+
+        function scaricaRisultati() {
+            const blob = new Blob([logRisultati.join("\n")], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.download = `report_gara.txt`;
+            a.href = window.URL.createObjectURL(blob);
+            a.click();
+        }
+    </script>
+</body>
+</html>
